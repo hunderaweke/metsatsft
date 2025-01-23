@@ -1,5 +1,7 @@
 package domain
 
+const UserCollection = "users"
+
 type User struct {
 	ID               string `bson:"_id,omitempty" json:"id,omitempty"`
 	Email            string `json:"email,omitempty"`

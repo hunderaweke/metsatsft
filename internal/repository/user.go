@@ -2,11 +2,13 @@ package repository
 
 import (
 	"context"
+	"log"
 
 	"github.com/hunderaweke/metsasft/internal/domain"
 	"github.com/sv-tools/mongoifc"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
@@ -16,14 +18,38 @@ type userRepository struct {
 }
 
 func NewUserRepository(db mongoifc.Database, ctx context.Context) domain.UserRepository {
-	return &userRepository{collection: db.Collection("users"), ctx: ctx}
+
+	collection := db.Collection(domain.UserCollection)
+	collection.Drop(ctx)
+	_, err := collection.Indexes().CreateMany(
+		ctx,
+		[]mongo.IndexModel{
+			{
+				Keys:    bson.D{{"telegram_username", 1}},
+				Options: options.Index().SetUnique(true),
+			},
+			{
+				Keys:    bson.D{{"phone_number", 1}},
+				Options: options.Index().SetUnique(true),
+			},
+			{
+				Keys:    bson.D{{"email", 1}},
+				Options: options.Index().SetUnique(true),
+			},
+		},
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return &userRepository{collection: collection, ctx: ctx}
 }
 
 func (r *userRepository) CreateUser(user domain.User) (domain.User, error) {
 	res, err := r.collection.InsertOne(r.ctx, user)
-	if err != nil {
-		return domain.User{}, err
+	if mongo.IsDuplicateKeyError(err) {
+		return domain.User{}, &domain.ErrDuplicateUser{Message: err.Error()}
 	}
+
 	objId := res.InsertedID.(primitive.ObjectID)
 	user.ID = objId.Hex()
 	return user, nil
