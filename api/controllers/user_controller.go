@@ -30,6 +30,8 @@ func (c *UserController) CreateUser(ctx *gin.Context) {
 		ctx.JSON(http.StatusNotAcceptable, gin.H{"error": err.Error()})
 		return
 	}
+	user.IsActive = false
+	user.IsAdmin = false
 	user, err = c.usecase.CreateUser(user)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -146,4 +148,24 @@ func (c *UserController) RefreshToken(ctx *gin.Context) {
 		return
 	}
 	ctx.JSON(http.StatusOK, gin.H{"refresh_token": newRefreshToken, "access_token": accessToken})
+}
+
+func (c *UserController) PromoteUser(ctx *gin.Context) {
+	id := ctx.Param("id")
+	err := c.usecase.PromoteUser(id)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	ctx.JSON(http.StatusOK, nil)
+}
+
+func (c *UserController) DemoteUser(ctx *gin.Context) {
+	id := ctx.Param("id")
+	err := c.usecase.DemoteUser(id)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	ctx.JSON(http.StatusOK, nil)
 }

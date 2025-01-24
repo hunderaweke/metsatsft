@@ -9,8 +9,8 @@ import (
 )
 
 const (
-	RefreshTokenDuration = time.Minute
-	AccessTokenDuration  = time.Second * 10
+	RefreshTokenDuration = time.Hour * 2
+	AccessTokenDuration  = time.Hour
 )
 
 type UserClaims struct {

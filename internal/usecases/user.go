@@ -13,8 +13,12 @@ type userUsecase struct {
 	repo domain.UserRepository
 }
 
-func NewUserUsecase(db mongoifc.Database, ctx context.Context) domain.UserUsecase {
-	return &userUsecase{repo: repository.NewUserRepository(db, ctx)}
+func NewUserUsecase(db mongoifc.Database, ctx context.Context) (domain.UserUsecase, bool, error) {
+	repo, created, err := repository.NewUserRepository(db, ctx)
+	if err != nil {
+		return nil, false, err
+	}
+	return &userUsecase{repo: repo}, created, nil
 }
 
 func (u *userUsecase) CreateUser(user domain.User) (domain.User, error) {
@@ -23,8 +27,6 @@ func (u *userUsecase) CreateUser(user domain.User) (domain.User, error) {
 		return domain.User{}, err
 	}
 	user.Password = hashedPassword
-	user.IsActive = false
-	user.IsAdmin = false
 	return u.repo.CreateUser(user)
 }
 func (u *userUsecase) GetUsers() ([]domain.User, error) {

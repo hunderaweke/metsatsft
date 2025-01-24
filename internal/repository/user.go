@@ -2,7 +2,6 @@ package repository
 
 import (
 	"context"
-	"log"
 
 	"github.com/hunderaweke/metsasft/internal/domain"
 	"github.com/sv-tools/mongoifc"
@@ -17,8 +16,7 @@ type userRepository struct {
 	ctx        context.Context
 }
 
-func NewUserRepository(db mongoifc.Database, ctx context.Context) domain.UserRepository {
-
+func NewUserRepository(db mongoifc.Database, ctx context.Context) (domain.UserRepository, bool, error) {
 	collection := db.Collection(domain.UserCollection)
 	_, err := collection.Indexes().CreateMany(
 		ctx,
@@ -37,11 +35,15 @@ func NewUserRepository(db mongoifc.Database, ctx context.Context) domain.UserRep
 			},
 		},
 	)
-	
+
 	if err != nil {
-		log.Fatal(err)
+		return nil, false, err
 	}
-	return &userRepository{collection: collection, ctx: ctx}
+	cnt, err := collection.CountDocuments(ctx, bson.M{})
+	if err != nil {
+		return nil, false, err
+	}
+	return &userRepository{collection: collection, ctx: ctx}, cnt == 0, nil
 }
 
 func (r *userRepository) CreateUser(user domain.User) (domain.User, error) {
@@ -83,26 +85,33 @@ func (r *userRepository) GetUsers(filter domain.UserFilter) ([]domain.User, erro
 
 func (r *userRepository) UpdateUser(user domain.User) (domain.User, error) {
 	existingUser, err := r.GetUserByID(user.ID)
+	update := bson.M{"$set": bson.M{}}
 	if err != nil {
 		return domain.User{}, err
 	}
 	if user.FirstName != existingUser.FirstName {
-		existingUser.FirstName = user.FirstName
+		update["$set"].(bson.M)["first_name"] = user.FirstName
 	}
 	if user.LastName != existingUser.LastName {
-		existingUser.LastName = user.LastName
+		update["$set"].(bson.M)["last_name"] = user.LastName
 	}
 	if user.TelegramUsername != existingUser.TelegramUsername {
-		existingUser.TelegramUsername = user.TelegramUsername
+		update["$set"].(bson.M)["telegram_username"] = user.TelegramUsername
 	}
 	if user.PhoneNumber != existingUser.PhoneNumber {
-		existingUser.PhoneNumber = user.PhoneNumber
+		update["$set"].(bson.M)["phone_number"] = user.PhoneNumber
+	}
+	if user.IsActive != existingUser.IsActive {
+		update["$set"].(bson.M)["is_active"] = user.IsActive
+	}
+	if user.IsAdmin != existingUser.IsAdmin {
+		update["$set"].(bson.M)["is_admin"] = user.IsAdmin
 	}
 	objID, err := primitive.ObjectIDFromHex(user.ID)
 	if err != nil {
 		return domain.User{}, err
 	}
-	_, err = r.collection.UpdateByID(r.ctx, objID, existingUser, options.Update())
+	_, err = r.collection.UpdateByID(r.ctx, objID, update, options.Update())
 	if err != nil {
 		return domain.User{}, err
 	}
