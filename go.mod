@@ -4,6 +4,7 @@ go 1.23.4
 
 require (
 	github.com/gin-gonic/gin v1.10.0
+	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/spf13/viper v1.19.0
 	github.com/sv-tools/mongoifc v1.17.1
 	go.mongodb.org/mongo-driver v1.17.2

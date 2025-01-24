@@ -23,6 +23,8 @@ func (u *userUsecase) CreateUser(user domain.User) (domain.User, error) {
 		return domain.User{}, err
 	}
 	user.Password = hashedPassword
+	user.IsActive = false
+	user.IsAdmin = false
 	return u.repo.CreateUser(user)
 }
 func (u *userUsecase) GetUsers() ([]domain.User, error) {
@@ -56,10 +58,32 @@ func (u *userUsecase) DeactivateUser(id string) error {
 	return err
 }
 
+func (u *userUsecase) PromoteUser(id string) error {
+	user, err := u.repo.GetUserByID(id)
+	if err != nil {
+		return err
+	}
+	user.IsAdmin = true
+	_, err = u.repo.UpdateUser(user)
+	return err
+}
+func (u *userUsecase) DemoteUser(id string) error {
+	user, err := u.repo.GetUserByID(id)
+	if err != nil {
+		return err
+	}
+	user.IsAdmin = false
+	_, err = u.repo.UpdateUser(user)
+	return err
+}
+
 func (u *userUsecase) GetUserByEmail(email string) (domain.User, error) {
 	users, err := u.repo.GetUsers(domain.UserFilter{Email: email})
 	if err != nil {
 		return domain.User{}, err
+	}
+	if len(users) == 0 {
+		return domain.User{}, &domain.ErrUserNotFound{}
 	}
 	return users[0], nil
 }

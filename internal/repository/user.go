@@ -20,7 +20,6 @@ type userRepository struct {
 func NewUserRepository(db mongoifc.Database, ctx context.Context) domain.UserRepository {
 
 	collection := db.Collection(domain.UserCollection)
-	collection.Drop(ctx)
 	_, err := collection.Indexes().CreateMany(
 		ctx,
 		[]mongo.IndexModel{
@@ -38,6 +37,7 @@ func NewUserRepository(db mongoifc.Database, ctx context.Context) domain.UserRep
 			},
 		},
 	)
+	
 	if err != nil {
 		log.Fatal(err)
 	}

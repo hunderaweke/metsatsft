@@ -7,7 +7,7 @@ type Database struct {
 	Username string `mapstructure:"username"`
 	Password string `mapstructure:"password"`
 	Name     string `mapstructure:"name"`
-}		
+}
 type Email struct {
 	Key     string `mapstructure:"key"`
 	Address string `mapstructure:"address"`
@@ -19,11 +19,18 @@ type Server struct {
 	Port string `mapstructure:"port"`
 	Url  string `mapstructure:"url"`
 }
+
+type Admin struct {
+	Email            string `mapstructure:"email"`
+	TelegramUsername string `mapstructure:"telegram_username"`
+	Password         string `mapstructure:"password"`
+}
 type Config struct {
 	Database Database `mapstructure:"database"`
 	Server   Server   `mapstructure:"server"`
 	Email    Email    `mapstructure:"email"`
 	Jwt      Jwt      `mapstructure:"jwt"`
+	Admin    Admin    `mapstructure:"admin"`
 }
 
 func LoadConfig() (Config, error) {

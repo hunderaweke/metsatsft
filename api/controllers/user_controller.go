@@ -4,7 +4,9 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 	"github.com/hunderaweke/metsasft/internal/domain"
+	"github.com/hunderaweke/metsasft/pkg"
 )
 
 type UserController struct {
@@ -18,6 +20,12 @@ func NewUserController(usecase domain.UserUsecase) *UserController {
 func (c *UserController) CreateUser(ctx *gin.Context) {
 	var user domain.User
 	err := ctx.ShouldBindJSON(&user)
+	if err != nil {
+		ctx.JSON(http.StatusNotAcceptable, gin.H{"error": err.Error()})
+		return
+	}
+	validate := validator.New()
+	err = validate.Struct(user)
 	if err != nil {
 		ctx.JSON(http.StatusNotAcceptable, gin.H{"error": err.Error()})
 		return
@@ -92,4 +100,50 @@ func (c *UserController) DeactivateUser(ctx *gin.Context) {
 		return
 	}
 	ctx.JSON(http.StatusOK, nil)
+}
+
+func (c *UserController) Login(ctx *gin.Context) {
+	var user domain.User
+	err := ctx.ShouldBindJSON(&user)
+	if err != nil {
+		ctx.JSON(http.StatusNotAcceptable, gin.H{"error": err.Error()})
+		return
+	}
+	user, err = c.usecase.Login(user.Email, user.Password)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	refreshToken, accessToken, err := pkg.GenerateToken(user)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{"refresh_token": refreshToken, "access_token": accessToken})
+}
+
+func (c *UserController) RefreshToken(ctx *gin.Context) {
+	refreshToken := struct {
+		Token string `json:"refresh_token"`
+	}{}
+	if err := ctx.ShouldBindJSON(&refreshToken); err != nil {
+		ctx.JSON(http.StatusNotAcceptable, gin.H{"error": err.Error()})
+		return
+	}
+	claims, err := pkg.ValidateRefreshToken(refreshToken.Token)
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		return
+	}
+	user, err := c.usecase.GetUserByID(claims.UserID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	newRefreshToken, accessToken, err := pkg.GenerateToken(user)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{"refresh_token": newRefreshToken, "access_token": accessToken})
 }

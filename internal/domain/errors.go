@@ -6,8 +6,6 @@ import (
 	"strings"
 )
 
-// Define errors here for using in the project
-
 type ErrInvalidCredentials struct{}
 
 func (e *ErrInvalidCredentials) Error() string {
@@ -45,4 +43,10 @@ func parseDuplicateKeyError(message string) map[string]string {
 		return fields
 	}
 	return nil
+}
+
+type ErrUserNotFound struct{}
+
+func (e *ErrUserNotFound) Error() string {
+	return "user not found"
 }
