@@ -73,14 +73,8 @@ func (r *userRepository) GetUsers(filter domain.UserFilter) ([]domain.User, erro
 		return nil, err
 	}
 	var users []domain.User
-	for res.Next(r.ctx) {
-		var user domain.User
-		if err := res.Decode(&user); err != nil {
-			return nil, err
-		}
-		users = append(users, user)
-	}
-	return users, nil
+	err = res.All(r.ctx, &users)
+	return users, err
 }
 
 func (r *userRepository) UpdateUser(user domain.User) (domain.User, error) {
@@ -112,9 +106,6 @@ func (r *userRepository) UpdateUser(user domain.User) (domain.User, error) {
 		return domain.User{}, err
 	}
 	_, err = r.collection.UpdateByID(r.ctx, objID, update, options.Update())
-	if err != nil {
-		return domain.User{}, err
-	}
 	return existingUser, nil
 }
 func (r *userRepository) DeleteUser(id string) error {
