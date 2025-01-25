@@ -16,6 +16,7 @@ func SetupRoutes(r *gin.Engine, c config.Config) error {
 	}
 	ctx := context.Background()
 	AddUserRoutes(r, db, ctx)
+	AddBlogRoutes(r, db, ctx)
 	// AddAuthRoutes(r, db, ctx)
 	return nil
 }

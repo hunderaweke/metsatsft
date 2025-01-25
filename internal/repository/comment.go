@@ -48,7 +48,7 @@ func (r *commentRepository) GetComments(filter domain.CommentFilter) ([]domain.C
 
 }
 func (r *commentRepository) UpdateComment(comment domain.Comment) (domain.Comment, error) {
-	existingComment, err := r.GetCommentByID(comment.ID)
+	existingComment, err := r.GetCommentByID(comment.BlogID, comment.ID)
 	updateMap := bson.M{"$set": bson.M{}}
 	if err != nil {
 		return domain.Comment{}, err
@@ -78,12 +78,13 @@ func (r *commentRepository) DeleteComment(id string) error {
 	}
 	return nil
 }
-func (r *commentRepository) GetCommentByID(id string) (domain.Comment, error) {
-	objID, err := primitive.ObjectIDFromHex(id)
+func (r *commentRepository) GetCommentByID(blogId, commentId string) (domain.Comment, error) {
+	objID, err := primitive.ObjectIDFromHex(commentId)
+	blogObjID, err := primitive.ObjectIDFromHex(blogId)
 	if err != nil {
 		return domain.Comment{}, err
 	}
-	res := r.c.FindOne(r.ctx, bson.M{"_id": objID})
+	res := r.c.FindOne(r.ctx, bson.M{"_id": objID, "blog_id": blogObjID})
 	if res.Err() != nil {
 		return domain.Comment{}, res.Err()
 	}

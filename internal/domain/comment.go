@@ -22,5 +22,5 @@ type CommentRepository interface {
 	GetComments(CommentFilter) ([]Comment, error)
 	UpdateComment(comment Comment) (Comment, error)
 	DeleteComment(id string) error
-	GetCommentByID(id string) (Comment, error)
+	GetCommentByID(blogId, commentId string) (Comment, error)
 }

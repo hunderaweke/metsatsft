@@ -48,6 +48,6 @@ func (u *blogUsecase) GetComments(blogID string) ([]domain.Comment, error) {
 func (u *blogUsecase) CreateComment(comment domain.Comment) (domain.Comment, error) {
 	return u.commentRepo.CreateComment(comment)
 }
-func (u *blogUsecase) GetCommentByID(id string) (domain.Comment, error) {
-	return u.commentRepo.GetCommentByID(id)
+func (u *blogUsecase) GetCommentByID(blogId, commentId string) (domain.Comment, error) {
+	return u.commentRepo.GetCommentByID(blogId, commentId)
 }

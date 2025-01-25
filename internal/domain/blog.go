@@ -42,5 +42,5 @@ type BlogUsecase interface {
 	GetBlogByModificationDateRange(ModificationDateRange) ([]Blog, error)
 	GetComments(blogID string) ([]Comment, error)
 	CreateComment(comment Comment) (Comment, error)
-	GetCommentByID(id string) (Comment, error)
+	GetCommentByID(blogId, commentId string) (Comment, error)
 }
