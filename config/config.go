@@ -9,8 +9,10 @@ type Database struct {
 	Name     string `mapstructure:"name"`
 }
 type Email struct {
-	Key     string `mapstructure:"key"`
-	Address string `mapstructure:"address"`
+	Host     string `mapstructure:"host"`
+	Port     int    `mapstructure:"port"`
+	Username string `mapstructure:"username"`
+	Password string `mapstructure:"password"`
 }
 type Jwt struct {
 	Secret string `mapstructure:"secret"`
