@@ -120,9 +120,6 @@ func (u *userUsecase) ForgetPassword(email string) error {
 	if err = u.tokenRepo.CreateToken(domain.Token{Token: token, Email: email}); err != nil {
 		return err
 	}
-	if err != nil {
-		return err
-	}
 	return pkg.SendResetEmail(user.Email, token)
 }
 

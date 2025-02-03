@@ -170,7 +170,7 @@ func (c *UserController) DemoteUser(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, nil)
 }
 
-func (c *UserController) ForgetPassword(ctx *gin.Context) {
+func (c *UserController) ForgotPassword(ctx *gin.Context) {
 	email := struct {
 		Email string `json:"email"`
 	}{}
@@ -184,4 +184,22 @@ func (c *UserController) ForgetPassword(ctx *gin.Context) {
 		return
 	}
 	ctx.JSON(http.StatusOK, gin.H{"message": "Reset token has been sent to your email"})
+}
+
+func (c *UserController) ResetPassword(ctx *gin.Context) {
+	email := ctx.Query("email")
+	token := ctx.Query("token")
+	password := struct {
+		Password string `json:"password"`
+	}{}
+	if err := ctx.ShouldBindJSON(&password); err != nil {
+		ctx.JSON(http.StatusNotAcceptable, gin.H{"error": err.Error()})
+		return
+	}
+	err := c.usecase.ResetPassword(email, token, password.Password)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{"message": "Password has been reset"})
 }

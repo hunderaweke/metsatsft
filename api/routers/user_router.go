@@ -27,6 +27,8 @@ func AddUserRoutes(r *gin.Engine, db mongoifc.Database, ctx context.Context) err
 	r.POST("/login", controller.Login)
 	r.POST("/refresh", controller.RefreshToken)
 	r.POST("/users", controller.CreateUser)
+	r.POST("/forgot-password", controller.ForgotPassword)
+	r.POST("/reset-password", controller.ResetPassword)
 	userRoutes := r.Group("/users")
 	userRoutes.Use(middlewares.AuthenticationMiddleware())
 	{
