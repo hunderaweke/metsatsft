@@ -2,6 +2,7 @@ package usecases
 
 import (
 	"context"
+	"errors"
 
 	"github.com/hunderaweke/metsasft/internal/domain"
 	"github.com/hunderaweke/metsasft/internal/repository"
@@ -10,7 +11,8 @@ import (
 )
 
 type userUsecase struct {
-	repo domain.UserRepository
+	repo      domain.UserRepository
+	tokenRepo domain.TokenRepository
 }
 
 func NewUserUsecase(db mongoifc.Database, ctx context.Context) (domain.UserUsecase, bool, error) {
@@ -18,7 +20,8 @@ func NewUserUsecase(db mongoifc.Database, ctx context.Context) (domain.UserUseca
 	if err != nil {
 		return nil, false, err
 	}
-	return &userUsecase{repo: repo}, created, nil
+	tokenRepo := repository.NewTokenRepository(db, ctx)
+	return &userUsecase{repo: repo, tokenRepo: tokenRepo}, created, nil
 }
 
 func (u *userUsecase) CreateUser(user domain.User) (domain.User, error) {
@@ -106,4 +109,43 @@ func (u *userUsecase) Login(email, password string) (domain.User, error) {
 		return domain.User{}, &domain.ErrInvalidCredentials{}
 	}
 	return user, nil
+}
+
+func (u *userUsecase) ForgetPassword(email string) error {
+	user, err := u.GetUserByEmail(email)
+	if err != nil {
+		return err
+	}
+	token, err := pkg.GenerateResetToken()
+	if err = u.tokenRepo.CreateToken(domain.Token{Token: token, Email: email}); err != nil {
+		return err
+	}
+	if err != nil {
+		return err
+	}
+	return pkg.SendResetEmail(user.Email, token)
+}
+
+func (u *userUsecase) ResetPassword(email, token, newPassword string) error {
+	user, err := u.GetUserByEmail(email)
+	if err != nil {
+		return err
+	}
+	t, err := u.tokenRepo.GetTokenByEmail(email)
+	if err != nil {
+		return err
+	}
+	if t.Token != token {
+		return errors.New("invalid token")
+	}
+	if err = u.tokenRepo.DeleteToken(email); err != nil {
+		return err
+	}
+	hashedPassword, err := pkg.HashPassword(newPassword)
+	if err != nil {
+		return err
+	}
+	user.Password = hashedPassword
+	_, err = u.repo.UpdateUser(user)
+	return err
 }

@@ -169,3 +169,19 @@ func (c *UserController) DemoteUser(ctx *gin.Context) {
 	}
 	ctx.JSON(http.StatusOK, nil)
 }
+
+func (c *UserController) ForgetPassword(ctx *gin.Context) {
+	email := struct {
+		Email string `json:"email"`
+	}{}
+	if err := ctx.ShouldBindJSON(&email); err != nil {
+		ctx.JSON(http.StatusNotAcceptable, gin.H{"error": err.Error()})
+		return
+	}
+	err := c.usecase.ForgetPassword(email.Email)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{"message": "Reset token has been sent to your email"})
+}

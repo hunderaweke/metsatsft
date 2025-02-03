@@ -41,4 +41,6 @@ type UserUsecase interface {
 	PromoteUser(id string) error
 	DemoteUser(id string) error
 	Login(email, password string) (User, error)
+	ForgetPassword(email string) error
+	ResetPassword(email, token, newPassword string) error
 }
