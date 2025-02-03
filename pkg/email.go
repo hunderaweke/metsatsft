@@ -1,20 +1,62 @@
 package pkg
 
 import (
+	"fmt"
+	"html/template"
+	"io"
+	"os"
+	"strings"
+
 	gomail "gopkg.in/mail.v2"
 
 	"github.com/hunderaweke/metsasft/config"
 )
 
-func sendEmail(subject, text, html, sender string, recipients []string, config config.Config) error {
+func sendEmail(subject, html, sender string, recipients []string, config config.Config) error {
 	message := gomail.NewMessage()
 	message.SetHeader("From", sender)
 	message.SetHeader("To", recipients...)
 	message.SetHeader("Subject", subject)
-	message.SetBody("text/plain", text)
 	message.AddAlternative("text/html", html)
 	dialer := gomail.NewDialer(config.Email.Host, config.Email.Port, config.Email.Username, config.Email.Password)
 	if err := dialer.DialAndSend(message); err != nil {
+		return err
+	}
+	return nil
+}
+
+func SendResetEmail(recipient, token string) error {
+
+	link := fmt.Sprintf("http://localhost:8080/reset-password?token=%s", token)
+	file, err := os.Open("templates/reset_password.html")
+	defer file.Close()
+	if err != nil {
+		return err
+	}
+	html, err := io.ReadAll(file)
+	if err != nil {
+		return err
+	}
+	parsedHtml, err := template.New("reset_password").Parse(string(html))
+	if err != nil {
+		return err
+	}
+	var buf strings.Builder
+	err = parsedHtml.Execute(&buf, struct {
+		Link string
+	}{
+		Link: link,
+	})
+	if err != nil {
+		return err
+	}
+	htmlText := buf.String()
+	config, err := config.LoadConfig()
+	if err != nil {
+		return err
+	}
+	err = sendEmail("Reset Password", htmlText, "hunderaweke@gmail.com", []string{recipient}, config)
+	if err != nil {
 		return err
 	}
 	return nil

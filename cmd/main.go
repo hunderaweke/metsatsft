@@ -1,7 +1,15 @@
 package main
 
-import "github.com/hunderaweke/metsasft/api/routers"
+import (
+	"fmt"
+
+	"github.com/hunderaweke/metsasft/pkg"
+)
 
 func main() {
-	routers.Run()
+	err := pkg.SendResetEmail("hunderaweke@gmail.com", "token")
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("Email sent successfully")
 }
