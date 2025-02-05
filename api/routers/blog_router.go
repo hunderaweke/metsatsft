@@ -15,13 +15,16 @@ func AddBlogRoutes(r *gin.Engine, db mongoifc.Database, ctx context.Context) {
 	controller := controllers.NewBlogController(usecase)
 	blogRouter := r.Group("/blogs")
 	{
-		blogRouter.POST("/", controller.CreateBlog, middlewares.AuthenticationMiddleware())
 		blogRouter.GET("/", controller.GetBlogs)
 		blogRouter.GET("/:blog_id", controller.GetBlog)
-		blogRouter.PUT("/:blog_id", controller.UpdateBlog, middlewares.AuthenticationMiddleware())
-		blogRouter.DELETE("/:blog_id", controller.DeleteBlog, middlewares.AuthenticationMiddleware(), middlewares.IsAdmin())
 		blogRouter.GET("/:blog_id/comments", controller.GetComments)
-		blogRouter.POST("/:blog_id/comments", controller.CreateComment, middlewares.AuthenticationMiddleware())
 		blogRouter.GET("/:blog_id/comments/:comment_id", controller.GetComment)
+	}
+	blogRouter.Use(middlewares.AuthenticationMiddleware())
+	{
+		blogRouter.POST("/", controller.CreateBlog)
+		blogRouter.PUT("/:blog_id", controller.UpdateBlog)
+		blogRouter.POST("/:blog_id/comments", controller.CreateComment)
+		blogRouter.DELETE("/:blog_id", controller.DeleteBlog, middlewares.IsAdmin())
 	}
 }

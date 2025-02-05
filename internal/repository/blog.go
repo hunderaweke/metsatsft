@@ -77,11 +77,6 @@ func (r *blogRepository) UpdateBlog(blog domain.Blog) (domain.Blog, error) {
 		updateMap["$set"].(bson.M)["status"] = existingBlog.Status
 		existingBlog.Status = blog.Status
 	}
-	// NOTE: this is when there is going to be a transferring of ownership
-	/* 	if blog.WriterID != existingBlog.WriterID {
-		updateMap["$set"].(bson.M)["writer_id"] = existingBlog.WriterID
-		existingBlog.WriterID = blog.WriterID
-	} */
 	if blog.LastModifiedDate.IsZero() {
 		updateMap["$set"].(bson.M)["last_modified_date"] = existingBlog.LastModifiedDate
 		existingBlog.LastModifiedDate = blog.LastModifiedDate

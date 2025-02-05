@@ -7,8 +7,8 @@ const CommentCollection = "comments"
 type Comment struct {
 	ID            string    `bson:"_id,omitempty" json:"id"`
 	Body          string    `json:"body" validate:"required"`
-	WriterID      string    `json:"writer_id" validate:"required"`
-	BlogID        string    `json:"blog_id" validate:"required"`
+	WriterID      string    `bson:"writer_id" json:"writer_id" validate:"required"`
+	BlogID        string    `bson:"blog_id" json:"blog_id" validate:"required"`
 	CommentedDate time.Time `bson:"commented_date" json:"commented_date" validate:"required"`
 }
 

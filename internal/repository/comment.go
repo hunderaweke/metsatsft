@@ -24,7 +24,7 @@ func (r *commentRepository) CreateComment(comment domain.Comment) (domain.Commen
 	if err != nil {
 		return domain.Comment{}, err
 	}
-	comment.ID = res.InsertedID.(string)
+	comment.ID = res.InsertedID.(primitive.ObjectID).Hex()
 	return comment, nil
 }
 func (r *commentRepository) GetComments(filter domain.CommentFilter) ([]domain.Comment, error) {
@@ -80,11 +80,10 @@ func (r *commentRepository) DeleteComment(id string) error {
 }
 func (r *commentRepository) GetCommentByID(blogId, commentId string) (domain.Comment, error) {
 	objID, err := primitive.ObjectIDFromHex(commentId)
-	blogObjID, err := primitive.ObjectIDFromHex(blogId)
 	if err != nil {
 		return domain.Comment{}, err
 	}
-	res := r.c.FindOne(r.ctx, bson.M{"_id": objID, "blog_id": blogObjID})
+	res := r.c.FindOne(r.ctx, bson.M{"_id": objID, "blog_id": blogId})
 	if res.Err() != nil {
 		return domain.Comment{}, res.Err()
 	}

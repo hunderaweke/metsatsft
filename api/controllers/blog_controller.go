@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
@@ -27,12 +28,14 @@ func (c *BlogController) CreateBlog(ctx *gin.Context) {
 		ctx.JSON(http.StatusNotAcceptable, gin.H{"error": err.Error()})
 		return
 	}
+	blog.WriterID = userId
+	blog.Status = "pending"
+	blog.LastModifiedDate = time.Now()
 	validate := validator.New()
 	if err := validate.Struct(blog); err != nil {
 		ctx.JSON(http.StatusNotAcceptable, gin.H{"error": err.Error()})
 		return
 	}
-	blog.WriterID = userId
 	blog, err := c.usecase.CreateBlog(blog)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -145,13 +148,14 @@ func (c *BlogController) CreateComment(ctx *gin.Context) {
 		ctx.JSON(http.StatusNotAcceptable, gin.H{"error": err.Error()})
 		return
 	}
+	comment.WriterID = userID
+	comment.BlogID = blogID
+	comment.CommentedDate = time.Now()
 	validate := validator.New()
 	if err := validate.Struct(comment); err != nil {
 		ctx.JSON(http.StatusNotAcceptable, gin.H{"error": err.Error()})
 		return
 	}
-	comment.WriterID = userID
-	comment.BlogID = blogID
 	comment, err := c.usecase.CreateComment(comment)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -162,7 +166,7 @@ func (c *BlogController) CreateComment(ctx *gin.Context) {
 
 func (c *BlogController) GetComment(ctx *gin.Context) {
 	blogId := ctx.Param("blog_id")
-	commentId := ctx.Param("id")
+	commentId := ctx.Param("comment_id")
 	comment, err := c.usecase.GetCommentByID(blogId, commentId)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
