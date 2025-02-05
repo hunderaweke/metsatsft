@@ -66,6 +66,14 @@ func (c *UserController) UpdateUser(ctx *gin.Context) {
 		ctx.JSON(http.StatusNotAcceptable, gin.H{"error": err.Error()})
 		return
 	}
+	if user_id, ok := ctx.Get("user_id"); ok {
+		if user_id != id {
+			ctx.JSON(http.StatusMethodNotAllowed, gin.H{"error": "You are not allowed to update this user"})
+			return
+		}
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid authorization"})
+		return
+	}
 	user.ID = id
 	user, err = c.usecase.UpdateUser(user)
 	if err != nil {
