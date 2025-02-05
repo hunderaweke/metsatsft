@@ -170,7 +170,7 @@ func (c *UserController) DemoteUser(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, nil)
 }
 
-func (c *UserController) ForgotPassword(ctx *gin.Context) {
+func (c *UserController) ForgetPassword(ctx *gin.Context) {
 	email := struct {
 		Email string `json:"email"`
 	}{}

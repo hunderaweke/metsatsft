@@ -26,8 +26,12 @@ func sendEmail(subject, html, sender string, recipients []string, config config.
 }
 
 func SendResetEmail(recipient, token string) error {
+	config, err := config.LoadConfig()
+	if err != nil {
+		return err
+	}
 
-	link := fmt.Sprintf("http://localhost:8080/reset-password?token=%s", token)
+	link := fmt.Sprintf(config.Server.Url+"/reset-password?token=%s&email=%s", token, recipient)
 	file, err := os.Open("templates/reset_password.html")
 	defer file.Close()
 	if err != nil {
@@ -51,10 +55,6 @@ func SendResetEmail(recipient, token string) error {
 		return err
 	}
 	htmlText := buf.String()
-	config, err := config.LoadConfig()
-	if err != nil {
-		return err
-	}
 	err = sendEmail("Reset Password", htmlText, "hunderaweke@gmail.com", []string{recipient}, config)
 	if err != nil {
 		return err

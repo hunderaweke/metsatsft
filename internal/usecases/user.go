@@ -30,7 +30,11 @@ func (u *userUsecase) CreateUser(user domain.User) (domain.User, error) {
 		return domain.User{}, err
 	}
 	user.Password = hashedPassword
-	return u.repo.CreateUser(user)
+	user, err = u.repo.CreateUser(user)
+	if err := u.ForgetPassword(user.Email); err != nil {
+		return domain.User{}, err
+	}
+	return user, nil
 }
 func (u *userUsecase) GetUsers() ([]domain.User, error) {
 	return u.repo.GetUsers(domain.UserFilter{})
@@ -130,13 +134,13 @@ func (u *userUsecase) ResetPassword(email, token, newPassword string) error {
 	}
 	t, err := u.tokenRepo.GetTokenByEmail(email)
 	if err != nil {
+		if err.Error() == "mongo: no documents in result" {
+			return errors.New("invalid token")
+		}
 		return err
 	}
 	if t.Token != token {
 		return errors.New("invalid token")
-	}
-	if err = u.tokenRepo.DeleteToken(email); err != nil {
-		return err
 	}
 	hashedPassword, err := pkg.HashPassword(newPassword)
 	if err != nil {
@@ -144,5 +148,9 @@ func (u *userUsecase) ResetPassword(email, token, newPassword string) error {
 	}
 	user.Password = hashedPassword
 	_, err = u.repo.UpdateUser(user)
+	if err != nil {
+		return err
+	}
+	err = u.tokenRepo.DeleteToken(email)
 	return err
 }

@@ -101,11 +101,18 @@ func (r *userRepository) UpdateUser(user domain.User) (domain.User, error) {
 	if user.IsAdmin != existingUser.IsAdmin {
 		update["$set"].(bson.M)["is_admin"] = user.IsAdmin
 	}
+	if user.Password != existingUser.Password {
+		update["$set"].(bson.M)["password"] = user.Password
+	}
 	objID, err := primitive.ObjectIDFromHex(user.ID)
 	if err != nil {
 		return domain.User{}, err
 	}
-	_, err = r.collection.UpdateByID(r.ctx, objID, update, options.Update())
+	filter := bson.M{"_id": objID}
+	_, err = r.collection.UpdateOne(r.ctx, filter, update, nil)
+	if err != nil {
+		return domain.User{}, err
+	}
 	return existingUser, nil
 }
 func (r *userRepository) DeleteUser(id string) error {
